@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Style Match — Outfit Card Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Baloo+2:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --pink: #ff4fa3;
+  --pink-deep: #e2348a;
+  --pink-pale: #ffe1f0;
+  --pink-paler: #fff3f9;
+  --lavender: #b98cff;
+  --lavender-pale: #ede1ff;
+  --mint: #57d9bd;
+  --gold: #ffcb3d;
+  --ink: #4a2545;
+  --ink-soft: #8a6483;
+  --white: #fffdfc;
+
+  --logo-font: "Pacifico", cursive;
+  --heading-font: "Baloo 2", cursive;
+  --body-font: "Quicksand", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--body-font);
+  color: var(--ink);
+  background: linear-gradient(160deg, #ffd7ec 0%, #ffeef7 38%, #f2e7ff 100%);
+  background-attachment: fixed;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(255,255,255,0.9) 2.5px, transparent 2.5px),
+    radial-gradient(circle, rgba(185,140,255,0.18) 2px, transparent 2px);
+  background-size: 46px 46px, 46px 46px;
+  background-position: 0 0, 23px 23px;
+}
+
+:focus-visible { outline: 3px solid var(--mint); outline-offset: 2px; }
+
+/* ---------- floating decor ---------- */
+
+.scene { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.roam {
+  position: absolute;
+  font-size: 26px;
+  filter: drop-shadow(0 3px 5px rgba(151, 45, 108, 0.18));
+  animation: float 5s ease-in-out infinite;
+  transform: rotate(var(--r, 0deg));
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-10px) rotate(var(--r, 0deg)); }
+}
+@keyframes twinkle {
+  0%, 100% { opacity: 0.55; transform: scale(0.9) rotate(var(--r, 0deg)); }
+  50% { opacity: 1; transform: scale(1.15) rotate(var(--r, 0deg)); }
+}
+.roam--twinkle { animation: twinkle 2.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .roam { animation: none; } }
+@media (max-width: 640px) { .roam { font-size: 20px; } }
+
+/* ---------- layout ---------- */
+
+.stage { position: relative; z-index: 2; display: flex; justify-content: center; padding: 40px 16px 60px; }
+
+.game {
+  width: 100%;
+  max-width: 760px;
+  background: var(--white);
+  border-radius: 26px;
+  box-shadow: 0 22px 50px rgba(151, 45, 108, 0.18), 0 2px 0 rgba(255,255,255,0.6) inset;
+  padding: 30px 30px 28px;
+}
+
+.game__header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 22px; }
+
+.game__mark {
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(140deg, var(--pink) 0%, var(--lavender) 100%);
+  color: var(--white);
+  font-family: var(--heading-font);
+  font-weight: 700;
+  font-size: 19px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 6px 14px rgba(255, 79, 163, 0.35);
+}
+
+.game__title {
+  font-family: var(--logo-font);
+  font-size: 38px;
+  line-height: 1;
+  margin: 4px 0 6px;
+  background: linear-gradient(90deg, var(--pink-deep), var(--lavender));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.game__subtitle { font-weight: 600; font-size: 14px; color: var(--ink-soft); margin: 0; }
+
+/* ---------- board ---------- */
+
+.board {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 640px) {
+  .board { grid-template-columns: 1fr; }
+}
+
+/* preview panel */
+
+.preview-panel { display: flex; flex-direction: column; gap: 12px; }
+
+.preview-card {
+  background: linear-gradient(150deg, var(--lavender-pale), var(--pink-paler));
+  border: 2px solid var(--pink-pale);
+  border-radius: 18px;
+  padding: 18px 16px;
+  text-align: center;
+}
+
+.preview-card__figure {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  min-height: 44px;
+  margin-bottom: 10px;
+}
+
+.preview-figure__piece { animation: card-in 0.25s ease; }
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.preview-card__names {
+  font-family: var(--heading-font);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+  margin: 0 0 12px;
+  line-height: 1.4;
+  min-height: 36px;
+}
+
+.preview-card__score-row { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+
+.score-badge {
+  background: var(--ink);
+  color: var(--white);
+  border-radius: 12px;
+  padding: 7px 12px;
+  display: flex; flex-direction: column; align-items: center; line-height: 1.1;
+}
+.score-badge__value { font-family: var(--heading-font); font-size: 18px; font-weight: 700; }
+.score-badge__label { font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.75; }
+.score-badge--pulse { animation: pulse 0.4s ease; }
+@keyframes pulse { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 100% { transform: scale(1); } }
+.score-badge--mini { padding: 5px 9px; border-radius: 9px; }
+.score-badge--mini .score-badge__value { font-size: 13px; }
+
+.vibe-chip {
+  font-family: var(--heading-font);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--pink-deep);
+  background: var(--white);
+  border: 1.5px solid var(--pink-pale);
+  border-radius: 999px;
+  padding: 6px 12px;
+}
+.vibe-chip--mini { font-size: 10.5px; padding: 4px 9px; }
+
+.preview-actions { display: flex; flex-direction: column; gap: 8px; }
+
+.btn {
+  font-family: var(--heading-font);
+  font-weight: 600;
+  font-size: 13.5px;
+  border-radius: 14px;
+  padding: 11px 14px;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.12s ease, box-shadow 0.15s ease;
+}
+.btn:active { transform: translateY(1px) scale(0.98); }
+.btn--solid {
+  background: linear-gradient(135deg, var(--pink), var(--pink-deep));
+  color: var(--white);
+  box-shadow: 0 8px 16px rgba(255, 79, 163, 0.32);
+}
+.btn--solid:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(255, 79, 163, 0.4); }
+.btn--ghost {
+  background: var(--pink-paler);
+  border: 2px solid var(--pink-pale);
+  color: var(--pink-deep);
+}
+.btn--ghost:hover { border-color: var(--pink); }
+.btn--pop { animation: pop 0.35s ease; }
+@keyframes pop { 0% { transform: scale(1); } 45% { transform: scale(1.08); } 100% { transform: scale(1); } }
+
+/* categories */
+
+.categories { display: flex; flex-direction: column; gap: 10px; justify-content: center; }
+
+.cat-row { display: flex; align-items: center; gap: 12px; }
+
+.cat-row__label {
+  width: 74px;
+  flex-shrink: 0;
+  font-family: var(--heading-font);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.cat-row__carousel { display: flex; align-items: center; gap: 8px; flex: 1; }
+
+.cat-row__arrow {
+  background: var(--pink-paler);
+  border: 2px solid var(--pink-pale);
+  border-radius: 10px;
+  width: 32px; height: 44px;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--pink-deep);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.cat-row__arrow:hover { background: var(--pink-pale); border-color: var(--pink); }
+
+.cat-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--pink-paler);
+  border: 2px solid var(--pink-pale);
+  border-radius: 14px;
+  padding: 6px 12px;
+  min-height: 44px;
+}
+
+.glyph-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  filter: drop-shadow(0 3px 3px rgba(74, 37, 69, 0.28));
+}
+
+.cat-card__name {
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.cat-card--pop { animation: card-pop 0.3s ease; }
+@keyframes card-pop {
+  0% { transform: scale(0.9) rotate(-2deg); opacity: 0.5; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* ---------- gallery ---------- */
+
+.gallery { border-top: 2px dashed var(--pink-pale); padding-top: 20px; }
+
+.gallery__head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.gallery__head h2 {
+  font-family: var(--heading-font);
+  font-size: 18px;
+  color: var(--ink);
+  margin: 0;
+}
+
+.gallery__clear {
+  background: none;
+  border: none;
+  font-family: var(--body-font);
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--pink-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.gallery__clear:hover { color: var(--pink); }
+
+.gallery__empty {
+  text-align: center;
+  color: var(--ink-soft);
+  font-weight: 600;
+  font-size: 13.5px;
+  padding: 22px 10px;
+  border: 1.5px dashed var(--pink-pale);
+  border-radius: 14px;
+  background: var(--pink-paler);
+  margin: 0;
+}
+
+.gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.look-card {
+  position: relative;
+  background: var(--pink-paler);
+  border: 2px solid var(--pink-pale);
+  border-radius: 14px;
+  padding: 14px 12px 12px;
+  text-align: center;
+  animation: card-in 0.25s ease;
+}
+
+.look-card__delete {
+  position: absolute;
+  top: 6px; right: 8px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--ink-soft);
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+.look-card__delete:hover { opacity: 1; color: var(--pink-deep); }
+
+.look-card__pieces { display: flex; justify-content: center; gap: 3px; flex-wrap: wrap; margin-bottom: 8px; }
+
+.look-card__names {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin: 0 0 8px;
+  line-height: 1.35;
+  min-height: 28px;
+}
+
+.look-card__footer { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+
+/* ---------- signature ---------- */
+
+.signature {
+  text-align: center;
+  font-family: var(--logo-font);
+  font-size: 17px;
+  color: var(--pink-deep);
+  margin: 26px 0 0;
+}
+.signature strong { color: var(--lavender); }
+
+@media (max-width: 480px) {
+  .game { padding: 24px 18px 22px; }
+  .game__title { font-size: 30px; }
+  .cat-row__label { width: 60px; font-size: 11.5px; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="scene" aria-hidden="true">
+  <span class="roam roam--twinkle" style="top:5%;left:4%;--r:-8deg">✦</span>
+  <span class="roam" style="top:8%;right:6%;--r:10deg">👑</span>
+  <span class="roam roam--twinkle" style="top:40%;left:3%;--r:-4deg">✧</span>
+  <span class="roam" style="top:60%;right:4%;--r:8deg">💎</span>
+  <span class="roam roam--twinkle" style="top:88%;left:8%;--r:-6deg">✦</span>
+  <span class="roam" style="top:90%;right:10%;--r:12deg">✨</span>
+</div>
+
+<div class="stage">
+  <div class="game">
+
+    <header class="game__header">
+      <span class="game__mark">SM</span>
+      <div>
+        <h1 class="game__title">Style Match</h1>
+        <p class="game__subtitle">flip the cards, build a look, chase the vibe ✨</p>
+      </div>
+    </header>
+
+    <section class="board">
+
+      <div class="preview-panel">
+        <div class="preview-card" id="previewCard">
+          <div class="preview-card__figure" id="previewFigure" aria-hidden="true"></div>
+          <p class="preview-card__names" id="previewNames">—</p>
+          <div class="preview-card__score-row">
+            <div class="score-badge" id="scoreBadge">
+              <span class="score-badge__value" id="scoreValue">0</span>
+              <span class="score-badge__label">style pts</span>
+            </div>
+            <span class="vibe-chip" id="vibeChip">—</span>
+          </div>
+        </div>
+
+        <div class="preview-actions">
+          <button class="btn btn--solid" id="shuffleBtn" type="button">
+            <span aria-hidden="true">🎲</span> Shuffle my look
+          </button>
+          <button class="btn btn--ghost" id="saveBtn" type="button">
+            <span aria-hidden="true">♡</span> Save this look
+          </button>
+        </div>
+      </div>
+
+      <div class="categories" id="categories"><!-- category rows injected here --></div>
+
+    </section>
+
+    <section class="gallery" aria-label="Saved looks">
+      <div class="gallery__head">
+        <h2>My Saved Looks</h2>
+        <button class="gallery__clear" id="clearBtn" type="button" hidden>Clear all</button>
+      </div>
+      <p class="gallery__empty" id="galleryEmpty">No looks saved yet — build one above and press "Save this look" 💕</p>
+      <div class="gallery__grid" id="galleryGrid"></div>
+    </section>
+
+    <p class="signature">designed &amp; coded by <strong>Sara Alkanaan</strong> &#10022;</p>
+
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   GAME DATA
+   Each category has 5 cards: a name, an accent color, and a
+   pattern style ("solid" | "dots" | "stripe" | "sparkle").
+   ========================================================= */
+
+const CATEGORIES = [
+  {
+    key: "dress",
+    label: "Dress",
+    shape: "dress",
+    items: [
+      { name: "Rose Gown", color: "#ff4fa3", pattern: "solid" },
+      { name: "Lavender Slip", color: "#b98cff", pattern: "solid" },
+      { name: "Mint Sundress", color: "#57d9bd", pattern: "dots" },
+      { name: "Gold Sequin", color: "#ffcb3d", pattern: "sparkle" },
+      { name: "Blush Tulle", color: "#ffe1f0", pattern: "stripe" },
+    ],
+  },
+  {
+    key: "shoes",
+    label: "Shoes",
+    shape: "shoe",
+    items: [
+      { name: "Ruby Heels", color: "#e2348a", pattern: "solid", glyph: "\u{1F460}" },
+      { name: "Lilac Flats", color: "#c9a8ff", pattern: "solid", glyph: "\u{1F97F}" },
+      { name: "Mint Sandals", color: "#57d9bd", pattern: "dots", glyph: "\u{1F461}" },
+      { name: "Gold Strappy", color: "#ffcb3d", pattern: "sparkle", glyph: "\u{1F460}" },
+      { name: "Pearl Boots", color: "#fffdfc", pattern: "stripe", glyph: "\u{1F462}" },
+    ],
+  },
+  {
+    key: "bag",
+    label: "Bag",
+    shape: "bag",
+    items: [
+      { name: "Fuchsia Clutch", color: "#ff4fa3", pattern: "solid" },
+      { name: "Lavender Tote", color: "#b98cff", pattern: "solid" },
+      { name: "Mint Crossbody", color: "#57d9bd", pattern: "dots" },
+      { name: "Gold Mini Bag", color: "#ffcb3d", pattern: "sparkle" },
+      { name: "Cream Satchel", color: "#fff3f9", pattern: "stripe" },
+    ],
+  },
+  {
+    key: "accessory",
+    label: "Accessory",
+    shape: "bow",
+    items: [
+      { name: "Pink Bow Clip", color: "#ff4fa3", pattern: "solid" },
+      { name: "Lavender Studs", color: "#b98cff", pattern: "solid" },
+      { name: "Mint Choker", color: "#57d9bd", pattern: "dots" },
+      { name: "Gold Hoops", color: "#ffcb3d", pattern: "sparkle" },
+      { name: "Pearl Necklace", color: "#fffdfc", pattern: "stripe" },
+    ],
+  },
+];
+
+const VIBES = [
+  "Pastel Princess", "Golden Hour", "Boho Luxe", "Chic Core",
+  "Mermaid Core", "Vintage Rose", "Starlit Glam", "Sweet Ingenue",
+];
+
+const STORAGE_KEY = "style-match-looks";
+const MAX_SAVED = 8;
+
+const $ = (id) => document.getElementById(id);
+
+/* =========================================================
+   STATE
+   ========================================================= */
+
+const state = {
+  // current index chosen within each category
+  selection: { dress: 0, shoes: 0, bag: 0, accessory: 0 },
+  savedLooks: loadLooks(),
+};
+
+function loadLooks() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (err) {
+    console.error("Could not read saved looks:", err);
+    return [];
+  }
+}
+
+function persistLooks() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.savedLooks));
+  } catch (err) {
+    console.error("Could not save looks:", err);
+  }
+}
+
+/* =========================================================
+   SVG SHAPES — clear, chunky "3D sticker" icons, recolored per card.
+   Big rounded silhouettes + a diagonal light-to-dark gradient for
+   volume + a glossy highlight + a soft drop shadow, so each card
+   reads instantly for kids and adults alike.
+   ========================================================= */
+
+function shadeColor(hex, percent) {
+  // percent: -100..100, negative = darker, positive = lighter
+  const clean = hex.replace("#", "");
+  const num = parseInt(clean.length === 3 ? clean.split("").map((c) => c + c).join("") : clean, 16);
+  let r = (num >> 16) & 255, g = (num >> 8) & 255, b = num & 255;
+  const t = percent < 0 ? 0 : 255;
+  const p = Math.abs(percent) / 100;
+  r = Math.round((t - r) * p) + r;
+  g = Math.round((t - g) * p) + g;
+  b = Math.round((t - b) * p) + b;
+  return `#${(1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1)}`;
+}
+
+function shapeSVG(shape, color, pattern, size) {
+  const uid = Math.random().toString(36).slice(2, 8);
+  const gradId = `grad-${shape}-${uid}`;
+  const light = shadeColor(color, 32);
+  const dark = shadeColor(color, -22);
+  const fillAttr = `url(#${gradId})`;
+
+  const defs = `<defs>
+    <linearGradient id="${gradId}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="${light}"/>
+      <stop offset="55%" stop-color="${color}"/>
+      <stop offset="100%" stop-color="${dark}"/>
+    </linearGradient>
+  </defs>`;
+
+  const ink = "#4a2545";
+
+  const paths = {
+    dress: `
+      <path d="M18 4 L15.5 -1" stroke="${ink}" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      <path d="M30 4 L32.5 -1" stroke="${ink}" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      <path d="M15 5 C15 2 33 2 33 5 L34.5 9 C35 11.5 33 13.5 30.5 14.5 L33 19 C39 24 41 36 39 47 C39 49.5 9 49.5 9 47 C7 36 9 24 15 19 L17.5 14.5 C15 13.5 13 11.5 13.5 9 Z"
+        fill="${fillAttr}" stroke="${ink}" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M24 15 L24 47" stroke="${dark}" stroke-width="1" opacity="0.4"/>
+      <ellipse cx="19" cy="9" rx="4.5" ry="3" fill="#ffffff" opacity="0.5" transform="rotate(-18 19 9)"/>`,
+
+    shoe: `
+      <path d="M31 20.5 L35.5 21.5 L33 47 L29 46 Z"
+        fill="${dark}" stroke="${ink}" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M4 34 C6 19 17 11 28 9 C32 9.5 34 12.5 34 17 L34 21 C25 24 13 28 4 34 Z"
+        fill="${fillAttr}" stroke="${ink}" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M6 32 C13 28 22 25 32 21.5" fill="none" stroke="${dark}" stroke-width="1.2" opacity="0.5" stroke-linecap="round"/>
+      <path d="M19 13.5 C23.5 15.5 28 16.8 31.5 16.5" fill="none" stroke="${ink}" stroke-width="1.6" stroke-linecap="round"/>
+      <circle cx="31.5" cy="16.5" r="1.8" fill="#fffdfc" stroke="${ink}" stroke-width="1"/>
+      <ellipse cx="11" cy="24" rx="4.2" ry="2.6" fill="#ffffff" opacity="0.45" transform="rotate(-24 11 24)"/>`,
+
+    bag: `
+      <path d="M11 16 C11 6 31 6 31 16" fill="none" stroke="${ink}" stroke-width="2.4" stroke-linecap="round"/>
+      <rect x="5" y="16" width="32" height="24" rx="7" fill="${fillAttr}" stroke="${ink}" stroke-width="2"/>
+      <path d="M15 16 H27 V22 A6 6 0 0 1 15 22 Z" fill="${dark}" opacity="0.35"/>
+      <circle cx="21" cy="27" r="3.4" fill="#fffdfc" stroke="${ink}" stroke-width="1.4"/>
+      <ellipse cx="12" cy="21" rx="3.5" ry="2.4" fill="#ffffff" opacity="0.4" transform="rotate(-20 12 21)"/>`,
+
+    bow: `
+      <path d="M20 15 C20 15 18 3 8 3.8 C1.5 4.4 1.5 15 8 15 C1.5 15 1.5 25.6 8 26.2 C18 27 20 15 20 15 Z"
+        fill="${fillAttr}" stroke="${ink}" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M20 15 C20 15 22 3 32 3.8 C38.5 4.4 38.5 15 32 15 C38.5 15 38.5 25.6 32 26.2 C22 27 20 15 20 15 Z"
+        fill="${fillAttr}" stroke="${ink}" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="20" cy="15" r="4" fill="#fffdfc" stroke="${ink}" stroke-width="1.6"/>
+      <circle cx="19" cy="14" r="1.3" fill="#ffffff" opacity="0.9"/>
+      <ellipse cx="9" cy="8" rx="2.6" ry="1.8" fill="#ffffff" opacity="0.45" transform="rotate(-20 9 8)"/>`,
+  };
+
+  const patternOverlay = {
+    dots: `<circle cx="18" cy="18" r="1.6" fill="#ffffff" opacity="0.55"/><circle cx="27" cy="24" r="1.4" fill="#ffffff" opacity="0.5"/><circle cx="16" cy="30" r="1.5" fill="#ffffff" opacity="0.5"/><circle cx="30" cy="12" r="1.3" fill="#ffffff" opacity="0.45"/>`,
+    stripe: `<path d="M8 8 L18 34" stroke="#ffffff" stroke-width="2.4" opacity="0.3" stroke-linecap="round"/><path d="M18 6 L28 32" stroke="#ffffff" stroke-width="2.4" opacity="0.3" stroke-linecap="round"/><path d="M28 6 L36 26" stroke="#ffffff" stroke-width="2.4" opacity="0.3" stroke-linecap="round"/>`,
+    sparkle: `<path d="M10 6 C10.5 9.4 11.2 10.6 15 11 C11.2 11.4 10.5 12.6 10 16 C9.5 12.6 8.8 11.4 5 11 C8.8 10.6 9.5 9.4 10 6 Z" fill="#fffdfc" opacity="0.9"/><path d="M33 26 C33.3 28 33.7 28.7 35.6 29 C33.7 29.3 33.3 30 33 32 C32.7 30 32.3 29.3 30.4 29 C32.3 28.7 32.7 28 33 26 Z" fill="#fffdfc" opacity="0.8"/>`,
+    solid: "",
+  };
+
+  const overlay = patternOverlay[pattern] || "";
+
+  return `<svg viewBox="-4 -4 52 56" width="${size}" height="${size}" aria-hidden="true" style="filter:drop-shadow(0 3px 3px rgba(74,37,69,.28)) drop-shadow(0 0 1px rgba(74,37,69,.15))">${defs}${paths[shape]}${overlay}</svg>`;
+}
+
+/* Shoes use a real emoji glyph (👠 👡 🥿 👢) instead of a hand-drawn
+   silhouette — unmistakable at a glance, at any size, for any age. */
+function iconMarkup(shape, color, pattern, glyph, size) {
+  if (glyph) {
+    return `<span class="glyph-icon" style="font-size:${Math.round(size * 0.86)}px">${glyph}</span>`;
+  }
+  return shapeSVG(shape, color, pattern, size);
+}
+
+/* =========================================================
+   SCORE + VIBE — deterministic "fun math" from the 4 picks
+   ========================================================= */
+
+function computeScore(sel) {
+  const idx = CATEGORIES.map((cat) => sel[cat.key]);
+  const sum = idx.reduce((a, b) => a + b, 0);
+  const spread = Math.max(...idx) - Math.min(...idx);
+  // reward matching picks (low spread) and variety (sum), clamp 55-99
+  const raw = 68 + (4 - spread) * 6 + (sum % 5) * 2;
+  return Math.max(55, Math.min(99, raw));
+}
+
+function computeVibe(sel) {
+  const idx = CATEGORIES.map((cat) => sel[cat.key]);
+  const sum = idx.reduce((a, b) => a + b, 0);
+  return VIBES[sum % VIBES.length];
+}
+
+/* =========================================================
+   RENDER — category carousels
+   ========================================================= */
+
+function renderCategories() {
+  const container = $("categories");
+  container.innerHTML = CATEGORIES.map((cat) => {
+    const item = cat.items[state.selection[cat.key]];
+    return `
+      <div class="cat-row" data-cat="${cat.key}">
+        <span class="cat-row__label">${cat.label}</span>
+        <div class="cat-row__carousel">
+          <button class="cat-row__arrow" data-cat="${cat.key}" data-dir="-1" type="button" aria-label="Previous ${cat.label}">&#10094;</button>
+          <div class="cat-card" id="card-${cat.key}">
+            ${iconMarkup(cat.shape, item.color, item.pattern, item.glyph, 52)}
+            <span class="cat-card__name">${item.name}</span>
+          </div>
+          <button class="cat-row__arrow" data-cat="${cat.key}" data-dir="1" type="button" aria-label="Next ${cat.label}">&#10095;</button>
+        </div>
+      </div>`;
+  }).join("");
+
+  container.querySelectorAll(".cat-row__arrow").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const cat = btn.dataset.cat;
+      const dir = Number(btn.dataset.dir);
+      cycleCategory(cat, dir);
+    });
+  });
+}
+
+function cycleCategory(catKey, dir) {
+  const cat = CATEGORIES.find((c) => c.key === catKey);
+  const len = cat.items.length;
+  state.selection[catKey] = (state.selection[catKey] + dir + len) % len;
+  flashCard(`card-${catKey}`);
+  renderCategoryCard(catKey);
+  renderPreview();
+}
+
+function renderCategoryCard(catKey) {
+  const cat = CATEGORIES.find((c) => c.key === catKey);
+  const item = cat.items[state.selection[catKey]];
+  const el = $(`card-${catKey}`);
+  el.innerHTML = `${iconMarkup(cat.shape, item.color, item.pattern, item.glyph, 52)}<span class="cat-card__name">${item.name}</span>`;
+}
+
+function flashCard(id) {
+  const el = $(id);
+  el.classList.remove("cat-card--pop");
+  void el.offsetWidth; // restart animation
+  el.classList.add("cat-card--pop");
+}
+
+/* =========================================================
+   RENDER — preview panel
+   ========================================================= */
+
+function renderPreview() {
+  const items = CATEGORIES.map((cat) => cat.items[state.selection[cat.key]]);
+  const names = items.map((i) => i.name).join(" + ");
+  $("previewNames").textContent = names;
+
+  $("previewFigure").innerHTML = CATEGORIES
+    .map((cat) => {
+      const item = cat.items[state.selection[cat.key]];
+      return `<div class="preview-figure__piece">${iconMarkup(cat.shape, item.color, item.pattern, item.glyph, 46)}</div>`;
+    })
+    .join("");
+
+  const score = computeScore(state.selection);
+  const vibe = computeVibe(state.selection);
+  animateScore(score);
+  $("vibeChip").textContent = vibe;
+}
+
+function animateScore(target) {
+  const el = $("scoreValue");
+  const start = Number(el.textContent) || 0;
+  const startTime = performance.now();
+  const duration = 350;
+
+  function step(now) {
+    const t = Math.min(1, (now - startTime) / duration);
+    const value = Math.round(start + (target - start) * t);
+    el.textContent = value;
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* =========================================================
+   SHUFFLE
+   ========================================================= */
+
+function shuffleLook() {
+  CATEGORIES.forEach((cat) => {
+    state.selection[cat.key] = Math.floor(Math.random() * cat.items.length);
+    flashCard(`card-${cat.key}`);
+    renderCategoryCard(cat.key);
+  });
+  renderPreview();
+  pulseScoreBadge();
+}
+
+function pulseScoreBadge() {
+  const badge = $("scoreBadge");
+  badge.classList.remove("score-badge--pulse");
+  void badge.offsetWidth;
+  badge.classList.add("score-badge--pulse");
+}
+
+/* =========================================================
+   SAVE / GALLERY
+   ========================================================= */
+
+function saveCurrentLook() {
+  const items = CATEGORIES.map((cat) => cat.items[state.selection[cat.key]]);
+  const look = {
+    id: Date.now(),
+    names: items.map((i) => i.name),
+    pieces: CATEGORIES.map((cat, i) => ({ shape: cat.shape, color: items[i].color, pattern: items[i].pattern, glyph: items[i].glyph })),
+    score: computeScore(state.selection),
+    vibe: computeVibe(state.selection),
+  };
+  state.savedLooks = [look, ...state.savedLooks].slice(0, MAX_SAVED);
+  persistLooks();
+  renderGallery();
+}
+
+function deleteLook(id) {
+  state.savedLooks = state.savedLooks.filter((l) => l.id !== id);
+  persistLooks();
+  renderGallery();
+}
+
+function renderGallery() {
+  const grid = $("galleryGrid");
+  const empty = $("galleryEmpty");
+  const clearBtn = $("clearBtn");
+
+  if (state.savedLooks.length === 0) {
+    grid.innerHTML = "";
+    empty.hidden = false;
+    clearBtn.hidden = true;
+    return;
+  }
+
+  empty.hidden = true;
+  clearBtn.hidden = false;
+
+  grid.innerHTML = state.savedLooks
+    .map(
+      (look) => `
+      <article class="look-card">
+        <button class="look-card__delete" data-id="${look.id}" type="button" aria-label="Remove look">&times;</button>
+        <div class="look-card__pieces">
+          ${look.pieces.map((p) => iconMarkup(p.shape, p.color, p.pattern, p.glyph, 34)).join("")}
+        </div>
+        <p class="look-card__names">${look.names.join(" + ")}</p>
+        <div class="look-card__footer">
+          <span class="score-badge score-badge--mini"><span class="score-badge__value">${look.score}</span></span>
+          <span class="vibe-chip vibe-chip--mini">${look.vibe}</span>
+        </div>
+      </article>`
+    )
+    .join("");
+
+  grid.querySelectorAll(".look-card__delete").forEach((btn) => {
+    btn.addEventListener("click", () => deleteLook(Number(btn.dataset.id)));
+  });
+}
+
+/* =========================================================
+   INIT
+   ========================================================= */
+
+$("shuffleBtn").addEventListener("click", shuffleLook);
+$("saveBtn").addEventListener("click", () => {
+  saveCurrentLook();
+  const btn = $("saveBtn");
+  btn.classList.remove("btn--pop");
+  void btn.offsetWidth;
+  btn.classList.add("btn--pop");
+});
+$("clearBtn").addEventListener("click", () => {
+  state.savedLooks = [];
+  persistLooks();
+  renderGallery();
+});
+
+renderCategories();
+renderPreview();
+renderGallery();
+
+</script>
+</body>
+</html>
